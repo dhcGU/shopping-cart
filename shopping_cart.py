@@ -1,54 +1,35 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Feb  9 21:12:55 2020
 
-@author: danca_000
+
+
+"""
+@author: dhc38
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 24 11:07:43 2020
-
-@author: DCagney
-"""
-import pytest
 import pandas as pd
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
-# products = [
-#     {"id":1, "name": "Chocolate Sandwich Cookies", "department": "snacks", "aisle": "cookies cakes", "price": 3.50},
-#     {"id":2, "name": "All-Seasons Salt", "department": "pantry", "aisle": "spices seasonings", "price": 4.99},
-#     {"id":3, "name": "Robust Golden Unsweetened Oolong Tea", "department": "beverages", "aisle": "tea", "price": 2.49},
-#     {"id":4, "name": "Smart Ones Classic Favorites Mini Rigatoni With Vodka Cream Sauce", "department": "frozen", "aisle": "frozen meals", "price": 6.99},
-#     {"id":5, "name": "Green Chile Anytime Sauce", "department": "pantry", "aisle": "marinades meat preparation", "price": 7.99},
-#     {"id":6, "name": "Dry Nose Oil", "department": "personal care", "aisle": "cold flu allergy", "price": 21.99},
-#     {"id":7, "name": "Pure Coconut Water With Orange", "department": "beverages", "aisle": "juice nectars", "price": 3.50},
-#     {"id":8, "name": "Cut Russet Potatoes Steam N' Mash", "department": "frozen", "aisle": "frozen produce", "price": 4.25},
-#     {"id":9, "name": "Light Strawberry Blueberry Yogurt", "department": "dairy eggs", "aisle": "yogurt", "price": 6.50},
-#     {"id":10, "name": "Sparkling Orange Juice & Prickly Pear Beverage", "department": "beverages", "aisle": "water seltzer sparkling water", "price": 2.99},
-#     {"id":11, "name": "Peach Mango Juice", "department": "beverages", "aisle": "refrigerated", "price": 1.99},
-#     {"id":12, "name": "Chocolate Fudge Layer Cake", "department": "frozen", "aisle": "frozen dessert", "price": 18.50},
-#     {"id":13, "name": "Saline Nasal Mist", "department": "personal care", "aisle": "cold flu allergy", "price": 16.00},
-#     {"id":14, "name": "Fresh Scent Dishwasher Cleaner", "department": "household", "aisle": "dish detergents", "price": 4.99},
-#     {"id":15, "name": "Overnight Diapers Size 6", "department": "babies", "aisle": "diapers wipes", "price": 25.50},
-#     {"id":16, "name": "Mint Chocolate Flavored Syrup", "department": "snacks", "aisle": "ice cream toppings", "price": 4.50},
-#     {"id":17, "name": "Rendered Duck Fat", "department": "meat seafood", "aisle": "poultry counter", "price": 9.99},
-#     {"id":18, "name": "Pizza for One Suprema Frozen Pizza", "department": "frozen", "aisle": "frozen pizza", "price": 12.50},
-#     {"id":19, "name": "Gluten Free Quinoa Three Cheese & Mushroom Blend", "department": "dry goods pasta", "aisle": "grains rice dried goods", "price": 3.99},
-#     {"id":20, "name": "Pomegranate Cranberry & Aloe Vera Enrich Drink", "department": "beverages", "aisle": "juice nectars", "price": 4.25}
-# ] # based on data from Instacart: https://www.instacart.com/datasets/grocery-shopping-2017
+pd.options.mode.chained_assignment = None
 
+load_dotenv()
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "You need an env var named SENDGRID_API_KEY.")
+SENDING_EMAIL = os.environ.get("SENDING_EMAIL", "You need an env var named SENDING_EMAIL.")
+print(SENDGRID_API_KEY)
 
 data = pd.read_csv("products.txt", index_col = "id")
 members= pd.read_csv("members.csv")
 members.set_index('Email', drop=True)
 
+#function that prints receipt to the terminal 
 def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
     print("#> ---------------------------------")
     print("#> GREEN FOODS GROCERY")
     print("#> WWW.GREEN-FOODS-GROCERY.COM")
     print("#> ---------------------------------")
-    print("#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print("#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p"))
     print("#> ---------------------------------")
     print("#> SELECTED PRODUCTS:")
     for item in receipt_strings:
@@ -60,6 +41,27 @@ def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
     print(f"#> TAX: ${tax:.2f}")
     print(f"#> TOTAL: ${total:.2f}")
     print("#> Please come again!")
+
+#function that returns the html content for emails
+def render_email(receipt_strings, subtotal, tax, total, discount=False):
+    html = ""
+    html +="#> ---------------------------------<br>"
+    html +="#> GREEN FOODS GROCERY<br>"
+    html +="#> WWW.GREEN-FOODS-GROCERY.COM<br>"
+    html +="#> ---------------------------------<br>"
+    html +="#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p")
+    html +="#> ---------------------------------<br>"
+    html +="#> SELECTED PRODUCTS:<br>"
+    for item in receipt_strings:
+        html += str(item) + "<br>"
+    if(discount == True):
+        html +="#> ... DISCOUNT " + " (-$3.00)<br>"
+    html +="#> ---------------------------------<br>"
+    html +=f"#> SUBTOTAL: ${subtotal:.2f}<br>"
+    html +=f"#> TAX: ${tax:.2f}<br>"
+    html +=f"#> TOTAL: ${total:.2f}<br>"
+    html +="#> Please come again!<br>"
+    return html
 
 receipt_strings = []
 subtotal = 0
@@ -81,7 +83,7 @@ while(True):
 #formats and stores a string for each product that was purchased
 for key in product_totals.keys():
     if(product_totals[key] > 0):
-        receipt_strings.append("#> ... " + str(product_totals[key]) + "x " + data.loc[product_totals[key]]['name'] +
+        receipt_strings.append("#> ... " + str(product_totals[key]) + "x " + data.loc[key]['name'] +
                                " ($" + "{:,.2f}".format(data.loc[key]['price'] * product_totals[key]) + ")" )
         subtotal += data.loc[key]["price"] * product_totals[key]
 #Loop for the rewards program prompt, 
@@ -94,51 +96,101 @@ while True:
     elif (rewards.lower() == "y"):
         while True:
             email = input("What is your email? (Or CANCEL to continue without using rewards)\n")
+            canceled = False
             if(email == "CANCEL"):
                 print_receipt(receipt_strings,  subtotal, tax, total)
+                canceled = True
                 break
             try:
                 name = members.loc[members['Email'] == email].Name.iloc[0]
                 points = members.loc[members['Email'] == email].Points.iloc[0]
-                points += subtotal
-                print(f"Thank you for you purchase,{name}")
-                print("With this purchase, you have {:,.0f} points.".format(points))
-                members['Points'][members['Email'] == email] = points
-                if(points > 100):
-                    print("You have over 100 points, so you'll be getting $3 off your bill!")
-                    subtotal -= 3
-                    members['Points'][members['Email'] == email] -= 100
-                    members.to_csv("members.csv",index=False)
-                    print_receipt(receipt_strings, subtotal, tax, total, discount=True)
-                    break
-                else:
-                    members.to_csv("members.csv", index=False)
-                    print_receipt(receipt_strings, subtotal, tax, total)
-                    break
-                    
+                break
             except:
                 print("I'm sorry, that email isn't in our records.")
-        break
-    else:
-        answer = input(("Would you like to join?\nYou get a point for every dollar"
-        " you spend with us, \nand once you have over 100 points you get $2 off your total! (y/n)\n"))
-        if (answer.lower() == "y"):
-            while True:
-                email = input("What is your email?\n")
-                name = input("what is your first name?\n")
-                if (email in set(members['Email'])):
-                    print("Sorry, that email is already taken. Please try again")
-                else:
+        if(canceled == True):
+            break
+        points += subtotal
+        print(f"Thank you for you purchase,{name}")
+        print("With this purchase, you have {:,.0f} points.".format(points))
+        members['Points'][members['Email'] == email] = points
+        while True:
+            emailReceipt = input("Would you like your receipt emailed to you? (y/n)\n")
+            if(emailReceipt.lower() == 'y' or emailReceipt.lower() == 'n'):
+                break
+            else:
+                print("Sorry, please respond \"y\" to email your receipt or \"n\" to print it.")
+        if(points > 100):
+            print("You have over 100 points, so you'll be getting $3 off your bill!")
+            subtotal -= 3
+            members['Points'][members['Email'] == email] -= 100
+            members.to_csv("members.csv",index=False)
+            if(emailReceipt == 'n'):
+                print_receipt(receipt_strings, subtotal, tax, total, discount=True)
+                break
+            else:
+                client = SendGridAPIClient(SENDGRID_API_KEY)
+                subject = "Your receipt from Green Grocery Store"
+                content = render_email(receipt_strings, subtotal, tax, total, discount=True)
+                message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
+                try:
+                    response = client.send(message)
+                    if(response.status_code != 202):  
+                        raise
+                    print("Your receipt has been emailed. Have a great day!")
                     break
-            total = subtotal * 1.0875
-            new_member = pd.DataFrame(data={'Email':email, 'Name':name, 'Points':total}, index=[0])
-            new_member.set_index('Email', drop=True)
-            members = members.append(new_member, sort=True)
-            members.to_csv("members.csv", index=False)
-            print("Your information has been saved!")
-            print("You now have {:,.0f} points!".format(subtotal))
-            print_receipt(receipt_strings, subtotal, tax, total)
+                except:
+                    print("Sorry, we couldn't email your receipt.")
+                    print_receipt(receipt_strings, subtotal, tax, total, discount=True)
+                    break
             break
         else:
-            print_receipt(receipt_strings, subtotal, tax, total) 
+            members.to_csv("members.csv", index=False)
+            if(emailReceipt == 'n'):
+                print_receipt(receipt_strings, subtotal, tax, total)
+                break
+            else:
+                client = SendGridAPIClient(SENDGRID_API_KEY) 
+                subject = "Your receipt from Green Grocery Store"
+                content = render_email(receipt_strings, subtotal, tax, total)
+                message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
+                try:
+                    response = client.send(message)
+                    if(response.status_code != 202):  
+                        raise
+                    print("Your receipt has been emailed. Have a great day!")
+                    break
+                except:
+                    print("Sorry, we couldn't email your receipt.")
+                    print_receipt(receipt_strings, subtotal, tax, total)
+                    break  
             break
+        break
+    else:
+        while True:
+            answer = input(("Would you like to join?\nYou get a point for every dollar"
+                            " you spend with us, \nand once you have over 100 points you get $3 off your total! (y/n)\n"))
+            if (answer.lower() == "y"):
+                while True:
+                    email = input("What is your email?\n")
+                    name = input("what is your first name?\n")
+                    if (email in set(members['Email'])):
+                        print("Sorry, that email is already taken. Please try again")
+                    else:
+                        break
+                total = subtotal * 1.0875
+                new_member = pd.DataFrame(data={'Email':email, 'Name':name, 'Points':total}, index=[0])
+                new_member.set_index('Email', drop=True)
+                members = members.append(new_member, sort=True)
+                members.to_csv("members.csv", index=False)
+                print("Your information has been saved!")
+                print("You now have {:,.0f} points!".format(subtotal))
+                print_receipt(receipt_strings, subtotal, tax, total)
+                break
+            elif (answer.lower() == "n"):
+                print_receipt(receipt_strings, subtotal, tax, total) 
+                break
+            else:
+                print("Sorry, please answer \"y\" for yes or \"n\" for no")
+                continue
+            break
+        break
