@@ -18,7 +18,7 @@ load_dotenv()
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "You need an env var named SENDGRID_API_KEY to use email functions.")
 SENDING_EMAIL = "Cagneys.corner@gmail.com"
 
-data = pd.read_csv("products.txt", index_col = "id")
+data = pd.read_csv("products.csv", index_col = "id") 
 members= pd.read_csv("members.csv")
 members.set_index('Email', drop=True)
 
