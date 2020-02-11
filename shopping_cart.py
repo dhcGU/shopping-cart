@@ -23,12 +23,12 @@ members= pd.read_csv("members.csv")
 members.set_index('Email', drop=True)
 
 #function that prints receipt to the terminal 
-def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
+def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discount = False):
     print("#> ---------------------------------")
     print("#> Cagney's Corner Shop")
     print("#> www.Cagneys-corner-shop.com")
     print("#> ---------------------------------")
-    print("#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p"))
+    print("#> CHECKOUT AT: " + beginning_time)
     print("#> ---------------------------------")
     print("#> SELECTED PRODUCTS:")
     for item in receipt_strings:
@@ -42,13 +42,13 @@ def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
     print("#> Please come again!")
 
 #function that returns the html content for emails
-def render_email(receipt_strings, subtotal, tax, total, discount=False):
+def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount=False):
     html = ""
     html +="#> ---------------------------------<br>"
     html +="#> Cagney's Corner Shop<br>"
     html +="#> www.Cagneys-corner-shop.com<br>"
     html +="#> ---------------------------------<br>"
-    html +="#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p")
+    html +="#> CHECKOUT AT: " + beginning_time + "<br>"
     html +="#> ---------------------------------<br>"
     html +="#> SELECTED PRODUCTS:<br>"
     for item in receipt_strings:
@@ -68,6 +68,7 @@ product_totals = {}
 for i in range(1, data.shape[0] + 1):
     product_totals[i] = 0
 
+beginning_time = datetime.now().strftime("%Y-%m-%d %I:%M %p")
 #loop for user input, stores the number of each product purchase
 while(True):
     prodID = input("Please input a product identifier, or DONE if finsihed: ")
@@ -97,7 +98,7 @@ while True:
             email = input("What is your email? (Or CANCEL to continue without using rewards)\n")
             canceled = False
             if(email == "CANCEL"):
-                print_receipt(receipt_strings,  subtotal, tax, total)
+                print_receipt(receipt_strings,  subtotal, tax, total, beginning_time)
                 canceled = True
                 break
             try:
@@ -124,12 +125,12 @@ while True:
             members['Points'][members['Email'] == email] -= 100
             members.to_csv("members.csv",index=False)
             if(emailReceipt == 'n'):
-                print_receipt(receipt_strings, subtotal, tax, total, discount=True)
+                print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discount=True)
                 break
             else:
                 client = SendGridAPIClient(SENDGRID_API_KEY)
                 subject = "Your receipt from Cagney's Corner Store"
-                content = render_email(receipt_strings, subtotal, tax, total, discount=True)
+                content = render_email(receipt_strings, subtotal, tax, total, beginning_time, discount=True)
                 message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
                 try:
                     response = client.send(message)
@@ -139,18 +140,18 @@ while True:
                     break
                 except:
                     print("Sorry, we couldn't email your receipt.")
-                    print_receipt(receipt_strings, subtotal, tax, total, discount=True)
+                    print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discount=True)
                     break
             break
         else:
-            members.to_csv("members.csv", index=False)
+            members.to_csv("members.csv", index=False) 
             if(emailReceipt == 'n'):
-                print_receipt(receipt_strings, subtotal, tax, total)
+                print_receipt(receipt_strings, subtotal, tax, total, beginning_time)
                 break
             else:
                 client = SendGridAPIClient(SENDGRID_API_KEY) 
                 subject = "Your receipt from Green Grocery Store"
-                content = render_email(receipt_strings, subtotal, tax, total)
+                content = render_email(receipt_strings, subtotal, tax, total, beginning_time)
                 message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
                 try:
                     response = client.send(message)
@@ -160,7 +161,7 @@ while True:
                     break
                 except:
                     print("Sorry, we couldn't email your receipt.")
-                    print_receipt(receipt_strings, subtotal, tax, total)
+                    print_receipt(receipt_strings, subtotal, tax, total, beginning_time)
                     break  
             break
         break
@@ -183,10 +184,10 @@ while True:
                 members.to_csv("members.csv", index=False)
                 print("Your information has been saved!")
                 print("You now have {:,.0f} points!".format(subtotal))
-                print_receipt(receipt_strings, subtotal, tax, total)
+                print_receipt(receipt_strings, subtotal, tax, total, beginning_time)
                 break
             elif (answer.lower() == "n"):
-                print_receipt(receipt_strings, subtotal, tax, total) 
+                print_receipt(receipt_strings, subtotal, tax, total, beginning_time) 
                 break
             else:
                 print("Sorry, please answer \"y\" for yes or \"n\" for no")
