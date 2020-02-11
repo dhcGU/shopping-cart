@@ -43,23 +43,24 @@ def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discoun
 
 #function that returns the html content for emails
 def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount=False):
-    html = ""
-    html +="#> ---------------------------------<br>"
-    html +="#> Cagney's Corner Shop<br>"
-    html +="#> www.Cagneys-corner-shop.com<br>"
-    html +="#> ---------------------------------<br>"
-    html +="#> CHECKOUT AT: " + beginning_time + "<br>"
-    html +="#> ---------------------------------<br>"
-    html +="#> SELECTED PRODUCTS:<br>"
+    html = "<div>"
+    html +="<br>"
+    html +=" Cagney's Corner Shop<br>"
+    html +=" www.Cagneys-corner-shop.com<br>"
+    html +="<br>"
+    html +=" CHECKOUT AT: " + beginning_time + "<br>"
+    html +="<br>"
+    html +=" SELECTED PRODUCTS:<br>"
     for item in receipt_strings:
-        html += str(item) + "<br>"
+        html += "<li>" + str(item)[6:] + "<br>"
     if(discount == True):
-        html +="#> ... DISCOUNT " + " (-$3.00)<br>"
-    html +="#> ---------------------------------<br>"
-    html +=f"#> SUBTOTAL: ${subtotal:.2f}<br>"
-    html +=f"#> TAX: ${tax:.2f}<br>"
-    html +=f"#> TOTAL: ${total:.2f}<br>"
-    html +="#> Please come again!<br>"
+        html +="<li>DISCOUNT " + " (-$3.00)<br>"
+    html +="<br>"
+    html +=f" SUBTOTAL: ${subtotal:.2f}<br>"
+    html +=f" TAX: ${tax:.2f}<br>"
+    html +=f" TOTAL: ${total:.2f}<br>"
+    html +=" Please come again!<br>"
+    html +="</div>"
     return html
 
 receipt_strings = []
