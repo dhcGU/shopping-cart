@@ -15,9 +15,8 @@ from sendgrid.helpers.mail import Mail
 pd.options.mode.chained_assignment = None
 
 load_dotenv()
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "You need an env var named SENDGRID_API_KEY.")
-SENDING_EMAIL = os.environ.get("SENDING_EMAIL", "You need an env var named SENDING_EMAIL.")
-print(SENDGRID_API_KEY)
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "You need an env var named SENDGRID_API_KEY to use email functions.")
+SENDING_EMAIL = "Cagneys.corner@gmail.com"
 
 data = pd.read_csv("products.txt", index_col = "id")
 members= pd.read_csv("members.csv")
@@ -26,8 +25,8 @@ members.set_index('Email', drop=True)
 #function that prints receipt to the terminal 
 def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
     print("#> ---------------------------------")
-    print("#> GREEN FOODS GROCERY")
-    print("#> WWW.GREEN-FOODS-GROCERY.COM")
+    print("#> Cagney's Corner Shop")
+    print("#> www.Cagneys-corner-shop.com")
     print("#> ---------------------------------")
     print("#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p"))
     print("#> ---------------------------------")
@@ -46,8 +45,8 @@ def print_receipt(receipt_strings, subtotal, tax, total, discount = False):
 def render_email(receipt_strings, subtotal, tax, total, discount=False):
     html = ""
     html +="#> ---------------------------------<br>"
-    html +="#> GREEN FOODS GROCERY<br>"
-    html +="#> WWW.GREEN-FOODS-GROCERY.COM<br>"
+    html +="#> Cagney's Corner Shop<br>"
+    html +="#> www.Cagneys-corner-shop.com<br>"
     html +="#> ---------------------------------<br>"
     html +="#> CHECKOUT AT: " + datetime.now().strftime("%Y-%m-%d %I:%M:%p")
     html +="#> ---------------------------------<br>"
@@ -110,7 +109,7 @@ while True:
         if(canceled == True):
             break
         points += subtotal
-        print(f"Thank you for you purchase,{name}")
+        print(f"Thank you for you purchase, {name}")
         print("With this purchase, you have {:,.0f} points.".format(points))
         members['Points'][members['Email'] == email] = points
         while True:
@@ -129,7 +128,7 @@ while True:
                 break
             else:
                 client = SendGridAPIClient(SENDGRID_API_KEY)
-                subject = "Your receipt from Green Grocery Store"
+                subject = "Your receipt from Cagney's Corner Store"
                 content = render_email(receipt_strings, subtotal, tax, total, discount=True)
                 message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
                 try:
