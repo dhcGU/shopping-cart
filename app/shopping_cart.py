@@ -23,9 +23,20 @@ members= pd.read_csv("members.csv")
 members.set_index('Email', drop=True)
 beginning_time = datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
-"""given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
-    and whether or not there is a discount, prints a receipt in a human-friendly format"""
+
 def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discount = False):
+    """
+    Given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
+    and whether or not there is a discount, prints a receipt in a human-friendly format
+    
+    Params
+        receipt_strings (list) each line item on the receipt
+        subtotal (numeric) the order's subtotal
+        tax (numeric) the order's tax
+        total (numeric) the order's subtotal and tac
+        begginning_time (string) the time at which the order began
+        discount (boolean) whether or not there is a discount on this order
+    """
     print("#> ---------------------------------")
     print("#> Cagney's Corner Shop")
     print("#> www.Cagneys-corner-shop.com")
@@ -44,10 +55,20 @@ def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discoun
     print("#> Please come again!")
 
 
-"""Given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
-    and whether or not there is a discount, returns an html that is in a human-friendly format
-    when displayed in a browser"""
 def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount=False):
+    """
+    Given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
+    and whether or not there is a discount, returns an html that is in a human-friendly format
+    when displayed in a browser
+        
+    Params
+        receipt_strings (list) each line item on the receipt
+        subtotal (numeric) the order's subtotal
+        tax (numeric) the order's tax
+        total (numeric) the order's subtotal and tac
+        begginning_time (string) the time at which the order began
+        discount (boolean) whether or not there is a discount on this order
+    """
     html = "<div>"
     html +="<br>"
     html +=" Cagney's Corner Shop<br>"
@@ -68,9 +89,19 @@ def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount
     html +="</div>"
     return html 
 
-"""sends an email to the email address stored in the 'email' argument with the content
-    stored in the 'content' argument"""
+
 def send_email(content, email):
+    """
+    Sends an email to the email address stored in the 'email' argument with the content
+    stored in the 'content' argument
+    
+    Params
+        content (string) the emails contents (ideally formatted as html)
+        email (string) the email address to send the content to
+    
+    Example:
+        send_email("<html><h1>Hello There</h1><br><br><h2>General Kenobi</h2></html>", "prequel@gmail.com")
+    """
     client = SendGridAPIClient(SENDGRID_API_KEY) 
     subject = "Your receipt from Cagney's Corner Store"
     message = Mail(from_email=SENDING_EMAIL, to_emails=email, subject=subject, html_content=content)
@@ -84,8 +115,16 @@ def send_email(content, email):
         print("Sorry, we couldn't email your receipt.")
         return False    
 
-"""Returns the integer or float stored in 'num' formatted with a dollar sign and 2 decimal points"""
+
 def to_usd(num):
+    """Returns the integer or float stored in 'num' formatted with a dollar sign and 2 decimal points
+    
+    Params
+        num (numeric) number to be formatted
+        
+    Example
+        to_usd(4.99)
+    """
     return f"${num:.2f}"
 
 
