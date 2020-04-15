@@ -23,7 +23,8 @@ members= pd.read_csv("members.csv")
 members.set_index('Email', drop=True)
 beginning_time = datetime.now().strftime("%Y-%m-%d %I:%M %p")
 
-#function that prints receipt to the terminal 
+"""given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
+    and whether or not there is a discount, prints a receipt in a human-friendly format"""
 def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discount = False):
     print("#> ---------------------------------")
     print("#> Cagney's Corner Shop")
@@ -37,12 +38,15 @@ def print_receipt(receipt_strings, subtotal, tax, total, beginning_time, discoun
     if(discount == True):
         print("#> ... DISCOUNT " + " (-$3.00)")
     print("#> ---------------------------------")
-    print(f"#> SUBTOTAL: ${to_usd(subtotal)}")
-    print(f"#> TAX: ${to_usd(tax)}")
-    print(f"#> TOTAL: ${to_usd(total)}")
+    print(f"#> SUBTOTAL: {to_usd(subtotal)}")
+    print(f"#> TAX: {to_usd(tax)}")
+    print(f"#> TOTAL: {to_usd(total)}")
     print("#> Please come again!")
 
-#function that returns the html content for emails
+
+"""Given the strings of items purchased, subtotal, tax, total, time at which the transaction started,
+    and whether or not there is a discount, returns an html that is in a human-friendly format
+    when displayed in a browser"""
 def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount=False):
     html = "<div>"
     html +="<br>"
@@ -64,6 +68,8 @@ def render_email(receipt_strings, subtotal, tax, total, beginning_time, discount
     html +="</div>"
     return html 
 
+"""sends an email to the email address stored in the 'email' argument with the content
+    stored in the 'content' argument"""
 def send_email(content, email):
     client = SendGridAPIClient(SENDGRID_API_KEY) 
     subject = "Your receipt from Cagney's Corner Store"
@@ -78,6 +84,7 @@ def send_email(content, email):
         print("Sorry, we couldn't email your receipt.")
         return False    
 
+"""Returns the integer or float stored in 'num' formatted with a dollar sign and 2 decimal points"""
 def to_usd(num):
     return f"${num:.2f}"
 
